@@ -39,7 +39,7 @@ attendees <- data.frame(name=attendeesraw$name,
                         ),
                         softwaredevelopment=unlist(
                           sapply(attendeesraw$answers, 
-                                 FUN = function(x) {
+                                 FUN = function(x) { 
                                    elem <- x$answer[3]
                                    as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
                                  }
