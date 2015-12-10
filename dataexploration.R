@@ -50,7 +50,7 @@ attendees <- data.frame(name=attendeesraw$name,
                                  FUN = function(x) {
                                    elem <- x$answer[4]
                                    as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
-                                 }
+                                 } 
                           )
                         ),
                         business=unlist(
