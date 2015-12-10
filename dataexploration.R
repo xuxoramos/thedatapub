@@ -45,7 +45,7 @@ attendees <- data.frame(name=attendeesraw$name,
                                  }
                           )
                         ),
-                        dataviz=unlist(
+                        dataviz=unlist( 
                           sapply(attendeesraw$answers, 
                                  FUN = function(x) {
                                    elem <- x$answer[4]
