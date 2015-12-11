@@ -68,6 +68,7 @@ attendees <- data.frame(
 attendeeslong <-
   gather(attendees, key = profileattribute, value = score,-name)
 
+
 #Format plots
 par(mfrow = c(3,4))
 plot(attendees$statistics, attendees$computerscience)
@@ -80,3 +81,5 @@ plot(attendees$computerscience, attendees$business)
 plot(attendees$softwaredevelopment, attendees$dataviz)
 plot(attendees$softwaredevelopment, attendees$business)
 plot(attendees$dataviz, attendees$business)
+
+corrplot.mixed(rho, lower = "ellipse", upper = 'number', tl.pos = 'd')
