@@ -1,70 +1,79 @@
+library(dplyr)
+library(googleVis)
+library(shinydashboard)
+library(corrplot)
+
+suppressPackageStartupMessages(library(googleVis))
+
 server <- function(input, output) {
 
-  # Meetup.com API key: 253275a5c18147e74c5b1e2a6708
-  meetupurl <-
-    "https://api.meetup.com/2/profiles?&sign=true&photo-host=public&group_urlname=thedatapub&page=100&key=253275a5c18147e74c5b1e2a6708"
+    # Plot for means by discipline
+  output$meanScoreByDiscipline <- renderGvis({
+    meanPlot <- gvisBarChart(chartid = 'meanScoreByDiscipline', meandiscipline,
+                             options = list(legend = "none")
+                             )
+    meanPlot
+  })
   
-  # Libraries
-  library(RCurl)
-  library(jsonlite)
-  library(dplyr)
-  library(tidyr)
+  # Gender plot
+  output$genderProportion <- renderGvis({
+    genPlot <- gvisColumnChart(chartid = 'genderProportion', gen, 
+                               options = list(legend = "none")
+                               )
+    genPlot
+  })
   
-  # Get Meetup.com list of attendees.
-  # Result from jsonlite call is a list, from which only
-  # the 1st element is the actual dataframe. We extract that.
-  attendeesraw <-
-    fromJSON(
-      getURL(meetupurl), simplifyVector = T, flatten = T, simplifyDataFrame = T
-    )[[1]]
+  output$genderDisciplineProportion <- renderGvis({
+    datSK <- data.frame(
+      from = c(rep('female', 5), rep('male', 5), rep('NA', 5)),
+      to = c(rep(c('stats','cs','swdev','dataviz','biz'), 3)),
+      weight = c(
+        round(mean(filter(attendees, gendr == 'female')$stats), 2),
+        round(mean(filter(attendees, gendr == 'female')$cs), 2),
+        round(mean(filter(attendees, gendr == 'female')$swdev), 2),
+        round(mean(filter(attendees, gendr == 'female')$dataviz), 2),
+        round(mean(filter(attendees, gendr == 'female')$biz), 2),
+        round(mean(filter(attendees, gendr == 'male')$stats), 2),
+        round(mean(filter(attendees, gendr == 'male')$cs), 2),
+        round(mean(filter(attendees, gendr == 'male')$swdev), 2),
+        round(mean(filter(attendees, gendr == 'male')$dataviz), 2),
+        round(mean(filter(attendees, gendr == 'male')$biz), 2),
+        round(mean(filter(attendees, gendr == 'NA')$stats), 2),
+        round(mean(filter(attendees, gendr == 'NA')$cs), 2),
+        round(mean(filter(attendees, gendr == 'NA')$swdev), 2),
+        round(mean(filter(attendees, gendr == 'NA')$dataviz), 2),
+        round(mean(filter(attendees, gendr == 'NA')$biz, 2))
+        )
+    )
+    
+    genDiscPlot <- gvisSankey(chartid = 'genderDisciplineProportion', 
+                              datSK, from = "from", to = "to", weight = "weight",
+                              options = list(legend = "none")
+                                )
+    genDiscPlot                  
+  })
   
-  # Build a new dataframe with just names and answers.
-  # Be aware that we cannot unlist and keep the same number of elements in the resulting vector
-  # because NULLs are eliminated. Instead, we should convert them to NA.
-  # Also, be aware that some scores have commas in them, so we're removing them from the start.
-  # Finally, we're converting each score from string to a numeric value.
-  attendees <- data.frame(
-    name = attendeesraw$name,
-    statistics = unlist(sapply(
-      attendeesraw$answers,
-      FUN = function(x) {
-        elem <- x$answer[1]
-        as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
-      }
-    )),
-    computerscience = unlist(sapply(
-      attendeesraw$answers,
-      FUN = function(x) {
-        elem <- x$answer[2]
-        as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
-      }
-    )),
-    softwaredevelopment = unlist(sapply(
-      attendeesraw$answers,
-      FUN = function(x) {
-        elem <- x$answer[3]
-        as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
-      }
-    )),
-    dataviz = unlist(sapply(
-      attendeesraw$answers,
-      FUN = function(x) {
-        elem <- x$answer[4]
-        as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
-      }
-    )),
-    business = unlist(sapply(
-      attendeesraw$answers,
-      FUN = function(x) {
-        elem <- x$answer[5]
-        as.numeric(ifelse(is.null(elem), NA, gsub(',','', substr(elem, 1, 3))))
-      }
-    )),
-    stringsAsFactors = F
-  )
+  # General correlation plot
+  output$corrPlot <- renderPlot({
+    rho <- cor(select(attendees, c(stats,cs,swdev,dataviz,biz)))
+    cp <-
+      corrplot.mixed(rho, lower = "ellipse", upper = 'number', tl.pos = 'd')
+    cp
+  })
   
-  # Create another dataframe in long format.
-  attendeeslong <-
-    gather(attendees, key = profileattribute, value = score,-name)
-  
+  # Correlation plot for women
+  output$corrFemalePlot <- renderPlot({
+    rhofem <- cor(select(filter(attendees, gendr == 'female'), c(stats,cs,swdev,dataviz,biz)))
+    cp <-
+      corrplot.mixed(rhofem, lower = "ellipse", upper = 'number', tl.pos = 'd')
+    cp
+  })
+
+    # Correlation plot for men
+  output$corrMalePlot <- renderPlot({
+    rhomal <- cor(select(filter(attendees, gendr == 'male'), c(stats,cs,swdev,dataviz,biz)))
+    cp <-
+      corrplot.mixed(rhomal, lower = "ellipse", upper = 'number', tl.pos = 'd')
+    cp
+  })
 }
