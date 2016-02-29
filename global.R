@@ -3,7 +3,7 @@ rm(list = ls())
 
 # Meetup.com API key: 253275a5c18147e74c5b1e2a6708
 meetupurl <-
-  "https://api.meetup.com/2/profiles?&sign=true&photo-host=public&group_urlname=thedatapub&page=100&key=253275a5c18147e74c5b1e2a6708"
+  "https://api.meetup.com/2/profiles?&sign=true&photo-host=public&group_urlname=thedatapub&key=253275a5c18147e74c5b1e2a6708"
 
 # Libraries
 library(RCurl)
